@@ -1,48 +1,117 @@
-import messageModel from "../models/message.model.js";
-import { generateResponse } from "../services/ai.service.js";
+// chat.controller.js
 
-export const chatController = async (req, res) => {
+import messageModel from "../models/message.model.js";
+
+import {
+    generateResponse,
+} from "../services/ai.service.js";
+
+export const chatController = async (
+    req,
+    res
+) => {
 
     try {
 
         const { message } = req.body;
 
         if (!message) {
+
             return res.status(400).json({
-                message: "Message is required"
+                message: "Message is required",
             });
+
         }
 
-        // save user message
-        const userMessage = await messageModel.create({
-            content: message,
-            role: "user"
-        });
+        // SAVE USER MESSAGE
 
-        // get previous chat history
-        const previousMessages = await messageModel.find()
-            .sort({ createdAt: 1 });
+        const userMessage =
+            await messageModel.create({
+                content: message,
+                role: "user",
+            });
 
-        // generate AI response with memory
-        const aiResponse = await generateResponse(previousMessages);
+        // GET CHAT HISTORY
 
-        // save ai response
-        const aiMessage = await messageModel.create({
-            content: aiResponse,
-            role: "ai"
-        });
+        const previousMessages =
+            await messageModel.find().sort({
+                createdAt: 1,
+            });
+
+        // GENERATE AI RESPONSE
+
+        const aiResponse =
+            await generateResponse(
+                previousMessages
+            );
+
+        console.log(
+            "RAW AI RESPONSE:",
+            aiResponse
+        );
+
+        let parsedResponse;
+
+        try {
+
+            const cleanedResponse =
+                aiResponse
+                    .replace(/```json/g, "")
+                    .replace(/```/g, "")
+                    .trim();
+
+            parsedResponse =
+                JSON.parse(cleanedResponse);
+
+        } catch (error) {
+
+            console.log(
+                "JSON PARSE ERROR:",
+                error.message
+            );
+
+            parsedResponse = {
+                reply:
+                    "Maazrat 😔 System issue aa gaya.",
+                intent: "error",
+                orderComplete: false,
+                customerName: "",
+                phone: "",
+                address: "",
+                paymentMethod: "",
+                items: [],
+                totalPrice: 0,
+            };
+
+        }
+
+        // SAVE FULL AI DATA
+
+        const aiMessage =
+            await messageModel.create({
+                content: JSON.stringify(
+                    parsedResponse
+                ),
+                role: "ai",
+            });
+
+        // RETURN RESPONSE
 
         return res.status(200).json({
             success: true,
             userMessage,
-            aiMessage
+            aiMessage,
+            aiData: parsedResponse,
         });
 
     } catch (error) {
 
+        console.log(error);
+
         return res.status(500).json({
-            message: "Internal server error",
-            error: error.message
+            message:
+                "Internal server error",
+            error: error.message,
         });
 
     }
