@@ -1,0 +1,22 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npx nodemon server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@langchain/core": "^1.1.45",
+    "@langchain/google-genai": "^2.1.30",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "langchain": "^1.4.0",
+    "mongoose": "^9.6.1"
+  }
+}
